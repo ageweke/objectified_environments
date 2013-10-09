@@ -33,15 +33,18 @@ describe ObjectifiedEnvironments::EnvironmentBuilder do
 
       names.each do |name|
         n = name
+        root = Object
+
         while n =~ /^([^:]+)::(.*)$/
           module_name = $1; n = $2
           is_defined = eval("defined?(#{module_name})")
           unless is_defined
-            eval "module #{module_name}; end"
+            root.module_eval "module #{module_name}; end"
           end
+          root = eval("#{root.name}::#{module_name}")
         end
 
-        eval "class #{name}; end"
+        root.module_eval "class #{name}; end"
       end
 
       block.call
@@ -90,9 +93,9 @@ describe ObjectifiedEnvironments::EnvironmentBuilder do
           exception.message.should =~ /baz/
 
           exception.message.should =~ /Objenv::Foo/
-          exception.message.should =~ /Objenv::BarFoo/
-          exception.message.should =~ /Objenv::BazFoo/
-          exception.message.should =~ /Objenv::BarBazFoo/
+          exception.message.should =~ /Objenv::User::BarFoo/
+          exception.message.should =~ /Objenv::Host::BazFoo/
+          exception.message.should =~ /Objenv::UserHost::BarBazFoo/
         end
       end
 
@@ -180,48 +183,48 @@ describe ObjectifiedEnvironments::EnvironmentBuilder do
 
     context "with a username" do
       it "should prefer a username-specified class" do
-        define_classes_for([ 'Objenv::BarFoo', 'Objenv::Foo' ]) do
+        define_classes_for([ 'Objenv::User::BarFoo', 'Objenv::Foo' ]) do
           env = new_with('foo', 'bar', 'baz').environment
-          env.class.should == Objenv::BarFoo
+          env.class.should == Objenv::User::BarFoo
         end
       end
 
       it "should not require a Rails-env-only class" do
-        define_classes_for([ 'Objenv::BarFoo' ]) do
+        define_classes_for([ 'Objenv::User::BarFoo' ]) do
           env = new_with('foo', 'bar', 'baz').environment
-          env.class.should == Objenv::BarFoo
+          env.class.should == Objenv::User::BarFoo
         end
       end
     end
 
     context "with a hostname" do
       it "should prefer a hostname-specified class" do
-        define_classes_for([ 'Objenv::BazFoo', 'Objenv::Foo' ]) do
+        define_classes_for([ 'Objenv::Host::BazFoo', 'Objenv::Foo' ]) do
           env = new_with('foo', 'bar', 'baz').environment
-          env.class.should == Objenv::BazFoo
+          env.class.should == Objenv::Host::BazFoo
         end
       end
 
       it "should not require a Rails-env-only class" do
-        define_classes_for([ 'Objenv::BazFoo' ]) do
+        define_classes_for([ 'Objenv::Host::BazFoo' ]) do
           env = new_with('foo', 'bar', 'baz').environment
-          env.class.should == Objenv::BazFoo
+          env.class.should == Objenv::Host::BazFoo
         end
       end
     end
 
     context "with a username and hostname both" do
       it "should prefer a username-and-hostname-specified class" do
-        define_classes_for([ 'Objenv::BarBazFoo', 'Objenv::BazFoo', 'Objenv::Foo' ]) do
+        define_classes_for([ 'Objenv::UserHost::BarBazFoo', 'Objenv::Host::BazFoo', 'Objenv::User::BarFoo', 'Objenv::Foo' ]) do
           env = new_with('foo', 'bar', 'baz').environment
-          env.class.should == Objenv::BarBazFoo
+          env.class.should == Objenv::UserHost::BarBazFoo
         end
       end
 
       it "should not require any other classes" do
-        define_classes_for([ 'Objenv::BarBazFoo' ]) do
+        define_classes_for([ 'Objenv::UserHost::BarBazFoo' ]) do
           env = new_with('foo', 'bar', 'baz').environment
-          env.class.should == Objenv::BarBazFoo
+          env.class.should == Objenv::UserHost::BarBazFoo
         end
       end
     end

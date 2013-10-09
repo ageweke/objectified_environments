@@ -3,57 +3,59 @@ require 'objectified_environments/errors'
 module ObjectifiedEnvironments
   class EnvironmentBuilder
     def initialize(data_provider)
-      @rails_env = data_provider.rails_env
-      @user_name = data_provider.user_name
-      @host_name = data_provider.host_name
+      @rails_env = normalize(data_provider.rails_env)
+      @user_name = normalize(data_provider.user_name)
+      @host_name = normalize(data_provider.host_name)
 
       raise ArgumentError, "@rails_env is required: #{rails_env.inspect}" unless @rails_env && @rails_env.strip.length > 0
     end
 
     def environment
-      candidates = [
-        maybe_candidate(@user_name, @host_name, @rails_env),
-        maybe_candidate(@host_name, @rails_env),
-        maybe_candidate(@user_name, @rails_env),
-        maybe_candidate(@rails_env)
-      ].compact
+      candidate_names = [ ]
 
-      raise "This should be impossible: we should always have a candidate" unless candidates.length > 0
+      candidate_names << class_name_for_candidate(@rails_env, @user_name, @host_name) if @user_name && @host_name
+      candidate_names << class_name_for_candidate(@rails_env, nil, @host_name) if @host_name
+      candidate_names << class_name_for_candidate(@rails_env, @user_name, @nil) if @user_name
+      candidate_names << class_name_for_candidate(@rails_env, nil, nil)
+
+      raise "This should be impossible: we should always have a candidate" unless candidate_names.length > 0
 
       out = nil
-      candidates.each do |candidate|
-        klass = class_for_candidate(candidate)
+      candidate_names.each do |candidate_name|
+        klass = begin
+          candidate_name.constantize
+        rescue NameError
+          nil
+        end
+
         return instantiate_from_class(klass) if klass
       end
 
-      no_environment_found!(candidates)
+      no_environment_found!(candidate_names)
     end
 
     private
-    def maybe_candidate(*args)
-      missing_args = false
-      args.each do |a|
-        missing_args = true if (! a) || (a.strip.length == 0)
-      end
-      return nil if missing_args
-
-      args.join("_")
+    def normalize(s)
+      s.strip unless (!s) || (s.strip.length == 0)
     end
 
-    def class_name_for_candidate(candidate)
-      "Objenv::#{candidate.camelize}"
-    end
+    def class_name_for_candidate(rails_env, user_name, host_name)
+      rails_env = normalize(rails_env)
+      user_name = normalize(user_name)
+      host_name = normalize(host_name)
 
-    def class_for_candidate(candidate)
-      class_name = class_name_for_candidate(candidate)
-
-      out = begin
-        class_name.constantize
-      rescue NameError
-        nil
+      if user_name && host_name
+        target = "#{user_name}_#{host_name}_#{rails_env}"
+        "Objenv::UserHost::#{target.camelize}"
+      elsif host_name
+        target = "#{host_name}_#{rails_env}"
+        "Objenv::Host::#{target.camelize}"
+      elsif user_name
+        target = "#{user_name}_#{rails_env}"
+        "Objenv::User::#{target.camelize}"
+      else
+        "Objenv::#{rails_env.camelize}"
       end
-
-      out
     end
 
     def instantiate_from_class(klass)
@@ -75,7 +77,7 @@ when we tried to instantiate it, we got the following exception:
       end
     end
 
-    def no_environment_found!(candidates)
+    def no_environment_found!(candidate_names)
       raise ObjectifiedEnvironments::EnvironmentMissingError, %{No ObjectifiedEnvironment definition was found.
 
 Rails.env: #{@rails_env.inspect}
@@ -84,7 +86,7 @@ Host name: #{@host_name.inspect}
 
 This caused us to look for any environment named one of these (in order):
 
-#{candidates.map { |c| class_name_for_candidate(c) }.join("\n")}
+#{candidate_names.join("\n")}
 
 ...but none of those exist.
 
