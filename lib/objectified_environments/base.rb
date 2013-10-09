@@ -8,5 +8,9 @@ module ObjectifiedEnvironments
 
     private
     attr_reader :rails_env, :user_name, :host_name
+
+    def must_implement
+      raise "You must override this method in #{self.class.name} or a superclass."
+    end
   end
 end
