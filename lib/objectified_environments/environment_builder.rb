@@ -67,7 +67,7 @@ module ObjectifiedEnvironments
 
         return klass.new(*args)
       rescue => e
-        raise ObjectifiedEnvironments::UnableToInstantiateEnvironmentError, %{We found a valid objectified environment class, but,
+        raise ObjectifiedEnvironments::UnableToInstantiateEnvironmentError, %{We found a valid objectified environment class '#{klass.name}', but,
 when we tried to instantiate it, we got the following exception:
 
 #{e.class.name}: #{e.message}
