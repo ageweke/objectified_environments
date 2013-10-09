@@ -3,6 +3,7 @@ require "objectified_environments/railtie"
 require "objectified_environments/data_provider"
 require "objectified_environments/environment_builder"
 require "objectified_environments/base"
+require "objectified_environments_generator"
 
 module ObjectifiedEnvironments
   class << self
