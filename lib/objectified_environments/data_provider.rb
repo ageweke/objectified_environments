@@ -1,3 +1,5 @@
+require 'rails'
+
 module ObjectifiedEnvironments
   class DataProvider
     def rails_env
@@ -36,7 +38,7 @@ module ObjectifiedEnvironments
     private
     def host_name_from_hostname_command
       out = `hostname`
-      out.strip if $?.success? && out && out.strip.length > 0
+      out if $?.success? && out && out.strip.length > 0
     end
 
     def socket_gethostname
@@ -50,7 +52,7 @@ module ObjectifiedEnvironments
       return nil unless hostname && hostname.strip.length > 0
 
       out = hostname.strip.downcase.gsub(/[\-_]+/, '_')
-      out if out =~ /^[A-Z_][A-Z0-9_]*$/ # must be a valid Ruby identifier
+      out if out =~ /^[A-Z_][A-Z0-9_]*$/i # must be a valid Ruby identifier
     end
   end
 end
