@@ -23,7 +23,6 @@ this can make an enormous difference in maintainability and reliability.}
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 2.14"
-  spec.add_development_dependency "rails", ">= 3.0", "~> 4.0"
 
-  spec.add_dependency "rails", ">= 3.0", "~> 4.0"
+  spec.add_dependency "rails", ">= 3.0", "<= 4.99.99"
 end
