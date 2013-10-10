@@ -26,7 +26,7 @@ class ObjectifiedEnvironmentsGenerator < Rails::Generators::Base
 
   def create_superclasses_for(environments)
     superclasses = environments.map { |e| superclass_for_environment(e) }.uniq
-    superclasses -= [ BASE_ENVIRONMENT_CLASS ]
+    superclasses -= [ "ObjectifiedEnvironments::Base" ]
     superclasses = superclasses.map do |sc|
       if sc =~ /::([A-Z0-9_]+)$/i
         $1
@@ -41,12 +41,17 @@ class ObjectifiedEnvironmentsGenerator < Rails::Generators::Base
     end
   end
 
+  DEFAULT_ENVIRONMENT_SUPERCLASS = 'Objenv::Environment'
   ENVIRONMENT_HIERARCHY = {
-    'Environment' => %w{LocalEnvironment ProductionEnvironment},
-    'LocalEnvironment' => %w{Development Test},
-    'ProductionEnvironment' => %w{Production}
+    'Environment' => "ObjectifiedEnvironments::Base",
+
+    'LocalEnvironment' => 'Environment',
+    'Development' => 'LocalEnvironment',
+    'Test' => 'LocalEnvironment',
+
+    'ProductionEnvironment' => 'Environment',
+    'Production' => 'ProductionEnvironment'
   }
-  BASE_ENVIRONMENT_CLASS = 'ObjectifiedEnvironments::Base'
   ENVIRONMENTS_MODULE = "Objenv"
 
   CLASS_COMMENTS = { }
@@ -152,15 +157,7 @@ end
   end
 
   def superclass_for_environment(environment)
-    specified = ENVIRONMENT_HIERARCHY.keys.detect do |k|
-      ENVIRONMENT_HIERARCHY[k].include?(environment.camelize)
-    end
-
-    if specified
-      "#{ENVIRONMENTS_MODULE}::#{specified}"
-    else
-      BASE_ENVIRONMENT_CLASS
-    end
+    ENVIRONMENT_HIERARCHY[environment.camelize] || DEFAULT_ENVIRONMENT_SUPERCLASS
   end
 
   def environment_defined?(environment)
