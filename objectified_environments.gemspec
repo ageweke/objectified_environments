@@ -8,9 +8,7 @@ Gem::Specification.new do |spec|
   spec.version       = ObjectifiedEnvironments::VERSION
   spec.authors       = ["Andrew Geweke"]
   spec.email         = ["andrew@geweke.org"]
-  spec.description   = %q{Exposes your Rails.env as an object you can invoke methods on, use inheritance to structure,
-and otherwise use all modern powerful programming techniques on. In large projects,
-this can make an enormous difference in maintainability and reliability.}
+  spec.description   = %q{Exposes your Rails.env as an object you can invoke methods on, use inheritance to structure, and otherwise use all modern powerful programming techniques on. In large projects, this can make an enormous difference in maintainability and reliability.}
   spec.summary       = %q{Vastly improve maintainability of your Rails.env-dependent code by using object-oriented environments.}
   spec.homepage      = ""
   spec.license       = "MIT"
