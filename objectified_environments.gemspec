@@ -7,13 +7,13 @@ Gem::Specification.new do |spec|
   spec.name          = "objectified_environments"
   spec.version       = ObjectifiedEnvironments::VERSION
   spec.authors       = ["Andrew Geweke"]
-  spec.email         = ["andrew@errorsea.com"]
+  spec.email         = ["andrew@geweke.org"]
   spec.description   = %q{Exposes your Rails.env as an object you can invoke methods on, use inheritance to structure,
 and otherwise use all modern powerful programming techniques on. In large projects,
 this can make an enormous difference in maintainability and reliability.}
   spec.summary       = %q{Vastly improve maintainability of your Rails.env-dependent code by using object-oriented environments.}
   spec.homepage      = ""
-  spec.license       = "Proprietary"
+  spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
