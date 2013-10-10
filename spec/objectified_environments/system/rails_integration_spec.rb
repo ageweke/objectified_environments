@@ -48,16 +48,9 @@ describe "ObjectifiedEnvironments Rails integration" do
 
   context "generator" do
     it "should create all necessary classes, including one for whatever RAILS_ENV is set" do
-      @rails_helper.with_new_rails_installation do
+      @rails_helper.with_new_rails_installation(:rails_env => 'bar') do
         add_gem_to_gemfile
-
-        old_rails_env = ENV['RAILS_ENV']
-        begin
-          ENV['RAILS_ENV'] = 'bar'
-          safe_system("bundle exec rails generate objectified_environments")
-        ensure
-          ENV['RAILS_ENV'] = old_rails_env
-        end
+        safe_system("bundle exec rails generate objectified_environments")
 
         spec_output_file = File.join('tmp', 'spec_script.rb')
         splat_file(spec_output_file, <<-EOS)
