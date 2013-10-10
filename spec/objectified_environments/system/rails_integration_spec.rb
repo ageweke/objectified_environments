@@ -39,7 +39,7 @@ describe "ObjectifiedEnvironments Rails integration" do
       begin
         ENV['RAILS_ENV'] = 'foo'
         result = safe_system("rails runner #{spec_output_file}")
-        result.strip.should == 'this_is_dev_env_1'
+        result.strip.should match(/^this_is_foo_env_1$/mi)
       ensure
         ENV['RAILS_ENV'] = old_rails_env
       end
