@@ -10,10 +10,6 @@ describe "ObjectifiedEnvironments Rails integration" do
     @rails_helper = ObjectifiedEnvironments::Specs::Helpers::RailsHelper.new(tmp_dir)
   end
 
-  after :each do
-    # FileUtils.rm_rf(File.dirname(@rails_root))
-  end
-
   def lib_objenv_dir
     File.join('config', 'lib', 'objenv')
   end
@@ -27,19 +23,23 @@ describe "ObjectifiedEnvironments Rails integration" do
     File.open(path, 'a') { |f| f << contents }
   end
 
-  it "should instantiate and use whatever environment is specified by default" do
+  def add_gem_to_gemfile
+    append_file('Gemfile', "gem 'objectified_environments', :path => '#{@gem_root}'\n")
+  end
+
+  it "should instantiate and use the development environment by default" do
     @rails_helper.with_new_rails_installation do
-      append_file('Gemfile', "gem 'objectified_environments', :path => '#{@gem_root}'")
-      splat_file(File.join(lib_objenv_dir, 'foo.rb'), %{class Objenv::Foo; def spec_output; "this_is_foo_env_1"; end; end})
+      add_gem_to_gemfile
+      splat_file(File.join(lib_objenv_dir, 'development.rb'), %{class Objenv::Development; def spec_output; "this_is_dev_env_1"; end; end})
 
       spec_output_file = File.join('tmp', 'spec_script.rb')
       splat_file(File.join(spec_output_file), "puts Rails.objenv.spec_output")
 
       old_rails_env = ENV['RAILS_ENV']
       begin
-        ENV['RAILS_ENV'] = 'foo'
-        result = safe_system("rails runner #{spec_output_file}")
-        result.strip.should match(/^this_is_foo_env_1$/mi)
+        ENV['RAILS_ENV'] = 'development'
+        result = safe_system("bundle exec rails runner #{spec_output_file}")
+        result.strip.should match(/^this_is_dev_env_1$/mi)
       ensure
         ENV['RAILS_ENV'] = old_rails_env
       end
@@ -49,12 +49,12 @@ describe "ObjectifiedEnvironments Rails integration" do
   context "generator" do
     it "should create all necessary classes, including one for whatever RAILS_ENV is set" do
       @rails_helper.with_new_rails_installation do
-        append_file('Gemfile', "gem 'objectified_environments', :path => '#{@gem_root}'")
+        add_gem_to_gemfile
 
         old_rails_env = ENV['RAILS_ENV']
         begin
           ENV['RAILS_ENV'] = 'bar'
-          safe_system("rails generate objectified_environments")
+          safe_system("bundle exec rails generate objectified_environments")
         ensure
           ENV['RAILS_ENV'] = old_rails_env
         end
@@ -86,7 +86,7 @@ describe "ObjectifiedEnvironments Rails integration" do
 end
 EOS
 
-        result = safe_system("rails runner #{spec_output_file}")
+        result = safe_system("bundle exec rails runner #{spec_output_file}")
 
         result.should match(/^Environment: ObjectifiedEnvironments::Base$/mi)
         result.should match(/^LocalEnvironment: ObjectifiedEnvironments::Base Objenv::Environment$/mi)

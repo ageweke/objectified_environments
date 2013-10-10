@@ -3,7 +3,18 @@ module ObjectifiedEnvironments
     module Helpers
       module CommandHelpers
         def safe_system(command, options = { })
+          # Ugh. Bundler sets environment variables that causes subprocesses to use the same Bundler Gemfiles, etc.
+          # While I'm sure this is exactly what you want in most circumstances, it breaks our handling of different
+          # Rails versions. So we remove these explicitly when we execute a subprocess.
+          old_env = { }
+          ENV.keys.select { |k| k =~ /^BUNDLE_/ }.each do |key|
+            old_env[key] = ENV[key]
+            ENV.delete(key)
+          end
+
           output = `#{command} 2>&1`
+
+          old_env.each { |k,v| ENV[k] = v }
 
           successful = $?.success?
           successful = false if options[:output_must_match] && (! (output =~ options[:output_must_match]))
