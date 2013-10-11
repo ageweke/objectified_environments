@@ -21,6 +21,11 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bundler", "~> 1.3"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 2.14"
+  spec.add_development_dependency "jquery-rails"
+
+  if defined?(RUBY_ENGINE) && RUBY_ENGINE == 'jruby'
+    spec.add_development_dependency "activerecord-jdbcsqlite3-adapter"
+  end
 
   spec.add_dependency "rails", ">= 3.0", "<= 4.99.99"
 end
