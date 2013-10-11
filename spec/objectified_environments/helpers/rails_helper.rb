@@ -83,6 +83,12 @@ module ObjectifiedEnvironments
           rails_holder = File.join(@container_dir, "rails-#{Rails.version}-#{Time.now.strftime("%Y%m%d-%H%M%S")}-#{rand(1_000_000)}")
           FileUtils.mkdir_p(rails_holder)
 
+          ENV.keys.sort.each { |k| puts "ENV['#{k}'] == #{ENV[k]}" }
+          $stdout.flush
+          result = `bundle config`
+          $stdout.puts "bundle config:\n#{result}\n\n"
+          $stdout.flush
+
           old_dir = Dir.pwd
           Dir.chdir(rails_holder)
           $stdout << "[creating new Rails installation..."
