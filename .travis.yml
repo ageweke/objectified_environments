@@ -7,10 +7,6 @@ rvm:
 env:
     - OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION=3.2.14
     - OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION=4.0.0
-gemfile:
-    - Gemfile
-    - gemfiles/rails3_2.gemfile
-    - gemfiles/rails4_0.gemfile
 matrix:
     exclude:
         -   rvm: 1.8.7
