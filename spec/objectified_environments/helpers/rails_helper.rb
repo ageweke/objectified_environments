@@ -145,6 +145,7 @@ module ObjectifiedEnvironments
 
           set_gemfile!
           modify_database_yml_as_needed!
+          copy_environment_as_needed!
           run_bundle_install!
 
           check_installed_rails_version!
@@ -206,6 +207,23 @@ module ObjectifiedEnvironments
                 new_yaml = new_yaml.split("\n").map { |l| l unless l =~ /^\-+$/i }.compact.join("\n")
                 File.open(db_yaml_file, 'w') { |f| f.puts new_yaml }
               end
+            end
+          end
+        end
+
+        # Similarly, if we're using a non-default RAILS_ENV setting, we need to make sure we have an environment
+        # file for it.
+        def copy_environment_as_needed!
+          rails_env = options[:rails_env]
+          if rails_env
+            rails_env = rails_env.to_s
+            env_directory = File.join('config', 'environments')
+            env_file = File.join(env_directory, "#{rails_env}.rb")
+
+            unless File.exist?(env_file)
+              dev_env_file = File.join(env_directory, "development.rb")
+              raise "No development.rb file at: #{dev_env_file}?!?" unless File.exist?(dev_env_file)
+              FileUtils.cp(dev_env_file, env_file)
             end
           end
         end
