@@ -1,6 +1,8 @@
 # ObjectifiedEnvironments
 
-Vastly improve maintainability of your Rails.env-dependent code by using object-oriented environments. Supports Rails 3.x and 4.x.
+Vastly improve maintainability of your Rails.env-dependent code by using object-oriented environments. Supports Rails 3.x and 4.x, running on Ruby 1.8.7 (3.x only), 1.9.2, 1.9.3, 2.0.0, and JRuby 1.7.4.
+
+Current build status: ![Current Build Status](https://api.travis-ci.org/ageweke/objectified_environments.png?branch=master)
 
 ## What? Why?
 
