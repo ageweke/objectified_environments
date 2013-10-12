@@ -6,8 +6,6 @@ describe "ObjectifiedEnvironments Rails integration" do
 
   before :each do
     @gem_root = File.expand_path(File.join(File.dirname(__FILE__), '..', '..', '..'))
-    tmp_dir = File.join(@gem_root, 'tmp')
-    @rails_helper = ObjectifiedEnvironments::Specs::Helpers::RailsHelper.new(tmp_dir)
   end
 
   def lib_objenv_dir
@@ -27,18 +25,20 @@ describe "ObjectifiedEnvironments Rails integration" do
     append_file('Gemfile', "gem 'objectified_environments', :path => '#{@gem_root}'\n")
   end
 
+  def new_rails_helper(options = { })
+    tmp_dir = File.join(@gem_root, 'tmp')
+    ObjectifiedEnvironments::Specs::Helpers::RailsHelper.new(tmp_dir, options)
+  end
+
   it "should instantiate and use the development environment by default" do
-    @rails_helper.with_new_rails_installation do
+    new_rails_helper.run! do |rh|
       add_gem_to_gemfile
       splat_file(File.join(lib_objenv_dir, 'development.rb'), %{class Objenv::Development; def spec_output; "this_is_dev_env_1"; end; end})
-
-      spec_output_file = File.join('tmp', 'spec_script.rb')
-      splat_file(File.join(spec_output_file), "puts Rails.objenv.spec_output")
 
       old_rails_env = ENV['RAILS_ENV']
       begin
         ENV['RAILS_ENV'] = 'development'
-        result = safe_system("bundle exec rails runner #{spec_output_file}")
+        result = rh.run_as_script!("puts Rails.objenv.spec_output", :script_name => "check_env_spec_script")
         result.strip.should match(/^this_is_dev_env_1$/mi)
       ensure
         ENV['RAILS_ENV'] = old_rails_env
@@ -48,12 +48,11 @@ describe "ObjectifiedEnvironments Rails integration" do
 
   context "generator" do
     it "should create all necessary classes, including one for whatever RAILS_ENV is set" do
-      @rails_helper.with_new_rails_installation(:rails_env => 'bar') do
+      new_rails_helper(:rails_env => 'bar').run! do |rh|
         add_gem_to_gemfile
-        safe_system("bundle exec rails generate objectified_environments")
+        rh.run_generator("objectified_environments")
 
-        spec_output_file = File.join('tmp', 'spec_script.rb')
-        splat_file(spec_output_file, <<-EOS)
+        script = <<-EOS
 %w{Bar Development Test Production LocalEnvironment ProductionEnvironment Environment}.each do |class_name|
   klass = eval("Objenv::" + class_name) rescue nil
   superclasses = [ ]
@@ -79,7 +78,7 @@ describe "ObjectifiedEnvironments Rails integration" do
 end
 EOS
 
-        result = safe_system("bundle exec rails runner #{spec_output_file}")
+        result = rh.run_as_script!(script, :script_name => "check_generator_spec_script")
 
         result.should match(/^Environment: ObjectifiedEnvironments::Base$/mi)
         result.should match(/^LocalEnvironment: ObjectifiedEnvironments::Base Objenv::Environment$/mi)
