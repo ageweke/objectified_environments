@@ -4,5 +4,5 @@ source 'https://rubygems.org'
 gemspec
 
 if ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']
-  gem 'rails', "=#{ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']}"
+  gem "rails", "=#{ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']}"
 end

@@ -18,9 +18,13 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_development_dependency "bundler", "~> 1.3"
+  spec.add_development_dependency "bundler"
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 2.14"
 
-  spec.add_dependency "rails", ">= 3.0", "<= 4.99.99"
+  if ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']
+    spec.add_dependency "rails", "=#{ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']}"
+  else
+    spec.add_dependency "rails", ">= 3.0", "<= 4.99.99"
+  end
 end
