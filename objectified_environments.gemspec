@@ -22,6 +22,12 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "rake"
   spec.add_development_dependency "rspec", "~> 2.14"
 
+  if defined?(RAILS_ENGINE) && RAILS_ENGINE == 'jruby'
+    spec.add_development_dependency "activerecord-jdbcsqlite3-adapter"
+  else
+    spec.add_development_dependency "sqlite3"
+  end
+
   if ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']
     spec.add_dependency "rails", "=#{ENV['OBJECTIFIED_ENVIRONMENTS_RAILS_TEST_VERSION']}"
   else
