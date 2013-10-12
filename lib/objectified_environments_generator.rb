@@ -1,4 +1,4 @@
-require 'rails/generators'
+require File.join(File.dirname(__FILE__), 'objectified_environments/rails_requirer')
 
 class ObjectifiedEnvironmentsGenerator < Rails::Generators::Base
   def create_environment_files
