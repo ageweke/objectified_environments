@@ -1,5 +1,7 @@
 require File.join(File.dirname(__FILE__), 'objectified_environments/rails_requirer')
 
+require 'rails/generators'
+
 class ObjectifiedEnvironmentsGenerator < Rails::Generators::Base
   def create_environment_files
     needed_environments = all_environments.select { |e| (! environment_defined?(e)) }
