@@ -7,6 +7,8 @@ module ObjectifiedEnvironments
       class RailsHelper
         include ObjectifiedEnvironments::Specs::Helpers::CommandHelpers
 
+        DEFAULT_RAILS_ENV = 'test'
+
         def initialize(container_dir, options = { })
           @container_dir = container_dir
           @options = options
@@ -14,9 +16,12 @@ module ObjectifiedEnvironments
           @root = nil
           @version = nil
           @running = false
+          @rails_env = (options[:rails_env] || DEFAULT_RAILS_ENV).to_s.strip
+
+          raise "This is not a valid Rails.env: #{@rails_env.inspect}" if @rails_env.length == 0
         end
 
-        attr_reader :root, :version
+        attr_reader :root, :version, :rails_env
 
         def run!(&block)
           begin
@@ -25,7 +30,7 @@ module ObjectifiedEnvironments
               new_rails_installation!
 
               Dir.chdir(root)
-              ENV['RAILS_ENV'] = options[:rails_env] if options[:rails_env]
+              ENV['RAILS_ENV'] = rails_env
 
               block.call(self)
 
@@ -200,25 +205,21 @@ module ObjectifiedEnvironments
         # configuration for that environment, even if we never actually touch the database, because certain Rails
         # versions refuse to even start if it's not present.
         def modify_database_yml_as_needed!
-          rails_env = options[:rails_env]
-          if rails_env
-            rails_env = rails_env.to_s
-            require 'yaml'
+          require 'yaml'
 
-            db_yaml_file = File.join('config', 'database.yml')
-            db_yaml = YAML.load_file(db_yaml_file)
+          db_yaml_file = File.join('config', 'database.yml')
+          db_yaml = YAML.load_file(db_yaml_file)
 
-            unless db_yaml[rails_env]
-              notify("adding environment '#{rails_env}' to database.yml") do
-                dev_content = db_yaml['development']
-                raise "No default database.yml entry for 'development'?!?" unless dev_content
+          unless db_yaml[rails_env]
+            notify("adding environment '#{rails_env}' to database.yml") do
+              test_content = db_yaml['test']
+              raise "No default database.yml entry for 'test'?!?" unless test_content
 
-                db_yaml[rails_env] = dev_content.dup
-                new_yaml = YAML.dump(db_yaml)
-                # Get rid of the silly '---' line that YAML.dump puts at the start.
-                new_yaml = new_yaml.split("\n").map { |l| l unless l =~ /^\-+$/i }.compact.join("\n")
-                File.open(db_yaml_file, 'w') { |f| f.puts new_yaml }
-              end
+              db_yaml[rails_env] = test_content.dup
+              new_yaml = YAML.dump(db_yaml)
+              # Get rid of the silly '---' line that YAML.dump puts at the start.
+              new_yaml = new_yaml.split("\n").map { |l| l unless l =~ /^\-+$/i }.compact.join("\n")
+              File.open(db_yaml_file, 'w') { |f| f.puts new_yaml }
             end
           end
         end
@@ -226,17 +227,13 @@ module ObjectifiedEnvironments
         # Similarly, if we're using a non-default RAILS_ENV setting, we need to make sure we have an environment
         # file for it.
         def copy_environment_as_needed!
-          rails_env = options[:rails_env]
-          if rails_env
-            rails_env = rails_env.to_s
-            env_directory = File.join('config', 'environments')
-            env_file = File.join(env_directory, "#{rails_env}.rb")
+          env_directory = File.join('config', 'environments')
+          env_file = File.join(env_directory, "#{rails_env}.rb")
 
-            unless File.exist?(env_file)
-              dev_env_file = File.join(env_directory, "development.rb")
-              raise "No development.rb file at: #{dev_env_file}?!?" unless File.exist?(dev_env_file)
-              FileUtils.cp(dev_env_file, env_file)
-            end
+          unless File.exist?(env_file)
+            test_env_file = File.join(env_directory, "test.rb")
+            raise "No test.rb file at: #{test_env_file}?!?" unless File.exist?(test_env_file)
+            FileUtils.cp(test_env_file, env_file)
           end
         end
 

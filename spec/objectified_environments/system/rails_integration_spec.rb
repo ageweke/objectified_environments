@@ -30,7 +30,7 @@ describe "ObjectifiedEnvironments Rails integration" do
     ObjectifiedEnvironments::Specs::Helpers::RailsHelper.new(tmp_dir, options)
   end
 
-  it "should instantiate and use the development environment by default" do
+  it "should instantiate and use the development environment properly when RAILS_ENV=development" do
     new_rails_helper.run! do |rh|
       add_gem_to_gemfile
       splat_file(File.join(lib_objenv_dir, 'development.rb'), %{class Objenv::Development; def spec_output; "this_is_dev_env_1"; end; end})
@@ -49,17 +49,17 @@ describe "ObjectifiedEnvironments Rails integration" do
   it "should be available during initializer and configuration time" do
     new_rails_helper.run! do |rh|
       add_gem_to_gemfile
-      splat_file(File.join(lib_objenv_dir, 'development.rb'), %{class Objenv::Development; def spec_output; "this_is_dev_env_2"; end; end})
+      splat_file(File.join(lib_objenv_dir, 'test.rb'), %{class Objenv::Test; def spec_output; "this_is_test_env_2"; end; end})
       splat_file(File.join(rh.root, 'config', 'initializers', 'spec_initializer.rb'), "puts 'initializer: ' + Rails.objenv.spec_output")
 
-      development_env_file = File.join(rh.root, "config", "environments", "development.rb")
-      development_env = "puts 'before env: ' + Rails.objenv.spec_output\n" + File.read(development_env_file) + "\nputs 'after env: ' + Rails.objenv.spec_output\n"
-      File.open(development_env_file, 'w') { |f| f << development_env }
+      test_env_file = File.join(rh.root, "config", "environments", "test.rb")
+      test_env = "puts 'before env: ' + Rails.objenv.spec_output\n" + File.read(test_env_file) + "\nputs 'after env: ' + Rails.objenv.spec_output\n"
+      File.open(test_env_file, 'w') { |f| f << test_env }
 
       result = rh.run_as_script!("puts 'done'", :script_name => "check_initializer_spec_script")
-      result.should match(/^initializer: this_is_dev_env_2$/mi)
-      result.should match(/^before env: this_is_dev_env_2$/mi)
-      result.should match(/^after env: this_is_dev_env_2$/mi)
+      result.should match(/^initializer: this_is_test_env_2$/mi)
+      result.should match(/^before env: this_is_test_env_2$/mi)
+      result.should match(/^after env: this_is_test_env_2$/mi)
       result.should match(/^done$/mi)
     end
   end
