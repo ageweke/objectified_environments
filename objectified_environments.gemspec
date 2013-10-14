@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.email         = ["andrew@geweke.org"]
   spec.description   = %q{Exposes your Rails.env as an object you can invoke methods on, use inheritance to structure, and otherwise use all modern powerful programming techniques on. In large projects, this can make an enormous difference in maintainability and reliability.}
   spec.summary       = %q{Vastly improve maintainability of your Rails.env-dependent code by using object-oriented environments.}
-  spec.homepage      = ""
+  spec.homepage      = "https://github.com/ageweke/objectified_environments"
   spec.license       = "MIT"
 
   spec.files         = `git ls-files`.split($/)
