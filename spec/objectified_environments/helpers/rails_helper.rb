@@ -163,9 +163,21 @@ module ObjectifiedEnvironments
           #
           # This is unfortunate, because it would be safer to use all the default gems. If a subsequent contributor
           # knows what's going on here and how to make it work, by all means, please do!
+
+
+          # We need to specify the version for Rails exactly like the outer Gemfile specifies it, and it might be
+          # from git (e.g., if we're testing against the master branch of Rails), so we can't just use #version in this
+          # class. Rather, we go grab the spec from Bundler.
+          rails_spec = Bundler.environment.specs.detect { |s| s.name == 'rails' }
+          raise "Can't find Bundler spec for 'rails'" unless rails_spec
+          rails_spec_version = case rails_spec.source
+          when Bundler::Source::Git then ":git => '#{rails_spec.source.uri}'"
+          else "'#{rails_spec.version}'"
+          end
+
           gem_lines = [
             "source 'http://rubygems.org'",
-            "gem 'rails', '#{version}'"
+            "gem 'rails', #{rails_spec_version}"
           ]
 
           # Rails >= 3.2 uses sqlite3 by default, and won't even boot by default unless you add that to your Gemfile.
@@ -249,8 +261,8 @@ module ObjectifiedEnvironments
           v = nil
 
           notify "checking version of Rails we're using" do
-            version_text = safe_system("rails --version", :output_must_match => /^\s*Rails\s+(\d+\.\d+\.\d+)\s*$/i, :what_we_were_doing => "checking the version of Rails used by the 'rails' command")
-            v = if version_text =~ /^\s*Rails\s+(\d+\.\d+\.\d+)\s*$/i
+            version_text = safe_system("rails --version", :output_must_match => /^\s*Rails\s+(\d+\.\d+\.\d+)/i, :what_we_were_doing => "checking the version of Rails used by the 'rails' command")
+            v = if version_text =~ /^\s*Rails\s+(\d+\.\d+\.\d+)/i
               $1
             else
               raise "Unable to determine version of Rails; we got: #{version_text.inspect}"
