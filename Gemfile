@@ -13,6 +13,5 @@ else "=#{rails_version}"
 end
 
 if version_spec
-  $stderr.puts "VERSION_SPEC: #{version_spec}"
   gem("rails", version_spec)
 end

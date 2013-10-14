@@ -46,6 +46,24 @@ describe "ObjectifiedEnvironments Rails integration" do
     end
   end
 
+  it "should be available during initializer and configuration time" do
+    new_rails_helper.run! do |rh|
+      add_gem_to_gemfile
+      splat_file(File.join(lib_objenv_dir, 'development.rb'), %{class Objenv::Development; def spec_output; "this_is_dev_env_2"; end; end})
+      splat_file(File.join(rh.root, 'config', 'initializers', 'spec_initializer.rb'), "puts 'initializer: ' + Rails.objenv.spec_output")
+
+      development_env_file = File.join(rh.root, "config", "environments", "development.rb")
+      development_env = "puts 'before env: ' + Rails.objenv.spec_output\n" + File.read(development_env_file) + "\nputs 'after env: ' + Rails.objenv.spec_output\n"
+      File.open(development_env_file, 'w') { |f| f << development_env }
+
+      result = rh.run_as_script!("puts 'done'", :script_name => "check_initializer_spec_script")
+      result.should match(/^initializer: this_is_dev_env_2$/mi)
+      result.should match(/^before env: this_is_dev_env_2$/mi)
+      result.should match(/^after env: this_is_dev_env_2$/mi)
+      result.should match(/^done$/mi)
+    end
+  end
+
   context "generator" do
     it "should create all necessary classes, including one for whatever RAILS_ENV is set" do
       new_rails_helper(:rails_env => 'bar').run! do |rh|
